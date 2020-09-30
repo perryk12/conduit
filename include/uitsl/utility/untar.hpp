@@ -7,6 +7,7 @@
 #include <fstream>
 #include <streambuf>
 #include <string>
+#include <string_view>
 
 #include "../../../third-party/Empirical/source/base/errors.h"
 #include "../../../third-party/Empirical/source/tools/string_utils.h"
@@ -25,37 +26,83 @@ namespace uitsl {
 
 namespace internal {
 
+// alias verbose namespace
+namespace stdfs = std::filesystem;
+
 /// Parse an octal number, ignoring leading and trailing nonsense.
-static int parseoct(const std::string_view view) {
-	int res;
+/// Parse an octal number, ignoring leading and trailing nonsense.
+unsigned int parseoct( const std::string_view view ) {
+	unsigned int res;
 	std::from_chars( std::begin(view), std::end(view), res, 8 );
 	return res;
 }
 
 /// Returns true if this is 512 zero bytes.
-static bool is_end_of_archive(const char *p) {
-	return std::all_of( p, p + 512, [](const auto& val){ return val == '\0'; });
+bool is_end_of_archive( const std::string_view buff_view ) {
+	return std::all_of(
+		std::begin(buff_view),
+		std::end(buff_view),
+		[](const char val){ return val == '\0'; }
+	);
 }
 
-/// Create a directory, including parent directories as necessary. */
-static void create_dir(const char *pathname, int mode) {
-	std::error_code ec;
+/// Verify the tar checksum.
+/// @return true on success, false on failure
+bool verify_checksum( const std::string_view buff_view ) {
 
-  std::filesystem::create_directories(pathname, ec);
+	// standard tar checksum adds unsigned bytes
+	const unsigned char* uptr{ reinterpret_cast<const unsigned char*>(
+		buff_view.data()
+	) };
 
-	if (ec) {
-		const std::string message{ emp::to_string(
-			"Could not create directory ",
-			pathname
-		) };
-		emp::NotifyError( message );
-		throw( message );
-	};
+	return std::accumulate(
+		uptr,
+		uptr + 148,
+		0ul
+	) + std::accumulate(
+		uptr + 156,
+		uptr + 512,
+		0ul
+	) + 0x20 * (156 - 148) == parseoct( buff_view.substr(148, 8) );
+
+}
+
+/// @return true on success, false on failure
+bool try_set_perms( const stdfs::path& path, const stdfs::perms mode ) {
+
+	std::error_code err;
+
+	stdfs::permissions(path, mode, err);
+
+	if ( err ) {
+		emp::NotifyError( emp::to_string(
+			"setting permissions for ", path, " failed with error code ", err
+		) );
+		return false;
+	} else return true;
+
+}
+
+/// Create a directory, including parent directories as necessary.
+/// @return true on success, false on failure
+bool try_mkdir( const stdfs::path& path, const stdfs::perms mode ) {
+
+	std::error_code err;
+
+  stdfs::create_directories(path, err);
+	if ( err ) {
+		emp::NotifyError( emp::to_string(
+			"creating directory ", path, " failed with error code ", err
+		) );
+		return false; // failure
+	}
+
+	return try_set_perms( path, mode ); // success if set perms succeeds
 
 }
 
 /* Create a file, including parent directory as necessary. */
-static FILE* create_file(char *pathname_in, int mode){
+static FILE* create_file(char *pathname_in, const stdfs::perms mode){
 
   const auto longlink_path = std::filesystem::path("@LongLink");
   std::string pathname(pathname_in);
@@ -81,32 +128,14 @@ static FILE* create_file(char *pathname_in, int mode){
 	f = fopen(pathname.c_str(), "wb+");
 	if (f == nullptr) {
 		/* Try creating parent dir and then creating file. */
-		create_dir(
+		try_mkdir(
       std::filesystem::path(pathname).parent_path().c_str(),
-      0755
+      stdfs::perms{ 0755 }
     );
 		f = fopen(pathname.c_str(), "wb+");
   }
 
 	return (f);
-}
-
-/// Verify the tar checksum.
-static bool verify_checksum(const char* ptr) {
-
-	// standard tar checksum adds unsigned bytes
-	const unsigned char* uptr{ reinterpret_cast<const unsigned char*>( ptr ) };
-
-	return std::accumulate(
-		uptr,
-		uptr + 148,
-		0
-	) + std::accumulate(
-		uptr + 156,
-		uptr + 512,
-		0
-	) + 0x20 * (156 - 148) == parseoct({ptr + 148, 8});
-
 }
 
 /// Extract 512 bytes of a tar file.
@@ -115,6 +144,7 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 	FILE *f = nullptr;
 
 	char buff[512];
+	const std::string_view buff_view{ buff, 512 };
 
 	size_t bytes_read{ fread(buff, 1, 512, source) };
 
@@ -128,14 +158,16 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 	}
 
 	// end of file
-	if ( is_end_of_archive(buff) ) return false;
+	if ( is_end_of_archive(buff_view) ) return false;
 
-	if ( !verify_checksum(buff) ) {
+	if ( !verify_checksum(buff_view) ) {
 		emp::NotifyError( "Checksum failure" );
 		throw( "Checksum failure" );
 	}
 
-	int filesize{ parseoct({buff + 124, 12}) };
+	size_t filesize{ parseoct({buff + 124, 12}) };
+
+	const auto perms{ stdfs::perms{ parseoct({buff + 100, 8}) } };
 
 	switch (buff[156]) {
 	case '1':
@@ -152,7 +184,7 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 		break;
 	case '5':
 		// Extracting dir
-		create_dir(buff, parseoct({buff + 100, 8}));
+		try_mkdir(buff, perms );
 		filesize = 0;
 		break;
 	case '6':
@@ -160,7 +192,7 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 		break;
 	default:
 		// Extracting file
-		f = create_file(buff, parseoct({buff + 100, 8}));
+		f = create_file(buff, perms );
 		break;
 	}
 
