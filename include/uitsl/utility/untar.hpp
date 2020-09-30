@@ -2,14 +2,11 @@
 #ifndef UITSL_UTILITY_UNTAR_HPP_INCLUDE
 #define UITSL_UTILITY_UNTAR_HPP_INCLUDE
 
+#include <algorithm>
 #include <charconv>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <string>
 #include <fstream>
 #include <streambuf>
+#include <string>
 
 #include "../../../third-party/Empirical/source/base/errors.h"
 #include "../../../third-party/Empirical/source/tools/string_utils.h"
@@ -30,11 +27,9 @@ namespace internal {
 
 /// Parse an octal number, ignoring leading and trailing nonsense.
 static int parseoct(const std::string_view view) {
-
 	int res;
 	std::from_chars( std::begin(view), std::end(view), res, 8 );
 	return res;
-
 }
 
 /// Returns true if this is 512 zero bytes.
@@ -42,13 +37,21 @@ static bool is_end_of_archive(const char *p) {
 	return std::all_of( p, p + 512, [](const auto& val){ return val == '\0'; });
 }
 
-/* Create a directory, including parent directories as necessary. */
+/// Create a directory, including parent directories as necessary. */
 static void create_dir(const char *pathname, int mode) {
 	std::error_code ec;
 
   std::filesystem::create_directories(pathname, ec);
 
-	if (ec) fprintf(stderr, "Could not create directory %s\n", pathname);
+	if (ec) {
+		const std::string message{ emp::to_string(
+			"Could not create directory ",
+			pathname
+		) };
+		emp::NotifyError( message );
+		throw( message );
+	};
+
 }
 
 /* Create a file, including parent directory as necessary. */
@@ -88,18 +91,25 @@ static FILE* create_file(char *pathname_in, int mode){
 	return (f);
 }
 
-/* Verify the tar checksum. */
-static int verify_checksum(const char *p) {
-	int n, u = 0;
-	for (n = 0; n < 512; ++n) {
-		/* Standard tar checksum adds unsigned bytes. */
-		if (n < 148 || n > 155) u += ((unsigned char *)p)[n];
-		else u += 0x20;
-	}
-	return (u == parseoct({p + 148, 8}));
+/// Verify the tar checksum.
+static bool verify_checksum(const char* ptr) {
+
+	// standard tar checksum adds unsigned bytes
+	const unsigned char* uptr{ reinterpret_cast<const unsigned char*>( ptr ) };
+
+	return std::accumulate(
+		uptr,
+		uptr + 148,
+		0
+	) + std::accumulate(
+		uptr + 156,
+		uptr + 512,
+		0
+	) + 0x20 * (156 - 148) == parseoct({ptr + 148, 8});
+
 }
 
-/* Extract 512 bytes of a tar file */
+/// Extract 512 bytes of a tar file.
 static bool untar_chunk(FILE* source, const std::string filename) {
 
 	FILE *f = nullptr;
@@ -110,10 +120,8 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 
 	if (bytes_read < 512) {
 		const std::string message{ emp::to_string(
-			"Short read on ",
-			filename,
-			": expected 512, got ",
-			bytes_read
+			"Short read on ", filename,
+			": expected 512, got ", bytes_read
 		) };
 		emp::NotifyError( message );
 		throw( message );
@@ -175,7 +183,7 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 		if (f != nullptr && fwrite(buff, 1, bytes_read, f) != bytes_read) {
 			emp::NotifyError( "Failed write" );
 			throw( "Failed write" );
-			fclose(f);
+			std::fclose(f);
 			f = nullptr;
 		}
 
@@ -184,7 +192,7 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 	}
 
 	if (f != nullptr) {
-		fclose(f);
+		std::fclose(f);
 		f = nullptr;
 	}
 
@@ -197,7 +205,7 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 /* Extract a tar archive. */
 static void untar(const std::string filename) {
 
-	FILE *source = fopen(filename.c_str(), "r");
+	FILE *source = std::fopen(filename.c_str(), "r");
 
 	while ( internal::untar_chunk( source, filename ) );
 
