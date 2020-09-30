@@ -89,7 +89,7 @@ static FILE* create_file(char *pathname_in, int mode){
 
 	FILE *f;
 	f = fopen(pathname.c_str(), "wb+");
-	if (f == NULL) {
+	if (f == nullptr) {
 		/* Try creating parent dir and then creating file. */
 		create_dir(
       std::filesystem::path(pathname).parent_path().c_str(),
@@ -115,18 +115,65 @@ static int verify_checksum(const char *p) {
 	return (u == parseoct(p + 148, 8));
 }
 
-/* Extract a tar archive. */
-static void untar(const std::string filename) {
+/* Extract 512 bytes of a tar file */
+static bool untar_chunk(FILE* source, const std::string filename) {
+
+	FILE *f = nullptr;
 
 	char buff[512];
-	FILE *a = fopen(filename.c_str(), "r");
-	FILE *f = NULL;
-	size_t bytes_read;
-	int filesize;
 
-	for (;;) {
+	size_t bytes_read{ fread(buff, 1, 512, source) };
 
-		bytes_read = fread(buff, 1, 512, a);
+	if (bytes_read < 512) {
+		const std::string message{ emp::to_string(
+			"Short read on ",
+			filename,
+			": expected 512, got ",
+			bytes_read
+		) };
+		emp::NotifyError( message );
+		throw( message );
+	}
+
+	// end of file
+	if ( is_end_of_archive(buff) ) return false;
+
+	if ( !verify_checksum(buff) ) {
+		emp::NotifyError( "Checksum failure" );
+		throw( "Checksum failure" );
+	}
+
+	int filesize{ parseoct(buff + 124, 12) };
+
+	switch (buff[156]) {
+	case '1':
+		// Ignoring hardlink
+		break;
+	case '2':
+		// Ignoring symlink
+		break;
+	case '3':
+		// Ignoring character device
+		break;
+	case '4':
+		// Ignoring block device
+		break;
+	case '5':
+		// Extracting dir
+		create_dir(buff, parseoct(buff + 100, 8));
+		filesize = 0;
+		break;
+	case '6':
+		 // Ignoring FIFO
+		break;
+	default:
+		// Extracting file
+		f = create_file(buff, parseoct(buff + 100, 8));
+		break;
+	}
+
+	while (filesize > 0) {
+		bytes_read = fread(buff, 1, 512, source);
 
 		if (bytes_read < 512) {
 			const std::string message{ emp::to_string(
@@ -139,76 +186,35 @@ static void untar(const std::string filename) {
 			throw( message );
 		}
 
-		// end of file
-		if ( is_end_of_archive(buff) ) return;
+		if (filesize < 512) bytes_read = filesize;
 
-
-		if ( !verify_checksum(buff) ) {
-			emp::NotifyError( "Checksum failure");
-			throw( "Checksum failure" );
-		}
-
-		filesize = parseoct(buff + 124, 12);
-
-		switch (buff[156]) {
-		case '1':
-			// Ignoring hardlink
-			break;
-		case '2':
-			// Ignoring symlink
-			break;
-		case '3':
-			// Ignoring character device
-			break;
-		case '4':
-			// Ignoring block device
-			break;
-		case '5':
-			// Extracting dir
-			create_dir(buff, parseoct(buff + 100, 8));
-			filesize = 0;
-			break;
-		case '6':
-			 // Ignoring FIFO
-			break;
-		default:
-			// Extracting file
-			f = create_file(buff, parseoct(buff + 100, 8));
-			break;
-		}
-
-		while (filesize > 0) {
-			bytes_read = fread(buff, 1, 512, a);
-
-			if (bytes_read < 512) {
-				const std::string message{ emp::to_string(
-					"Short read on ",
-					filename,
-					": expected 512, got ",
-					bytes_read
-				) };
-				emp::NotifyError( message );
-				throw( message );
-			}
-
-			if (filesize < 512) bytes_read = filesize;
-
-			if (f != NULL && fwrite(buff, 1, bytes_read, f) != bytes_read) {
-				emp::NotifyError( "Failed write" );
-				throw( "Failed write" );
-				fclose(f);
-				f = NULL;
-			}
-
-			filesize -= bytes_read;
-
-		}
-
-		if (f != NULL) {
+		if (f != nullptr && fwrite(buff, 1, bytes_read, f) != bytes_read) {
+			emp::NotifyError( "Failed write" );
+			throw( "Failed write" );
 			fclose(f);
-			f = NULL;
+			f = nullptr;
 		}
+
+		filesize -= bytes_read;
+
 	}
+
+	if (f != nullptr) {
+		fclose(f);
+		f = nullptr;
+	}
+
+	return true;
+
+}
+
+/* Extract a tar archive. */
+static void untar(const std::string filename) {
+
+	FILE *source = fopen(filename.c_str(), "r");
+
+	while ( untar_chunk( source, filename ) );
+
 }
 
 } // namespace uitsl
