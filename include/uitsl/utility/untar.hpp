@@ -196,6 +196,7 @@ bool try_unpack_file( FILE* source, FILE* dest, const size_t filesize ) {
 
 }
 
+/// @return true on success, false on failure
 bool try_skip(
 	const std::string category,
 	const stdfs::path path,
@@ -205,17 +206,16 @@ bool try_skip(
 
 	emp::NotifyWarning( emp::to_string( "ignoring ", category, " ", path ) );
 
-	for ( size_t consumed = 0; consumed < size; consumed += 512 ) {
-
-		static char ignore[512];
-		if (const size_t read = std::fread(ignore, 1, 512, source); read < 512) {
-			emp::NotifyError( emp::to_string(
-				"short read: expected 512 bytes, got ", read
-			) );
-			return false; // failure
-		}	else continue; // keep going
-
+	if ( size % 512 != 0 ) {
+		emp::NotifyError( emp::to_string( "size not multiple of 512 ", size ) );
+		return false; // failure
 	}
+
+	const auto res{ std::fseek( source, size, SEEK_CUR ) };
+	if ( res != 0 ) {
+		emp::NotifyError( "bad seek, error code ", res );
+		return false; // failure
+	};
 
 	return true; // success
 
