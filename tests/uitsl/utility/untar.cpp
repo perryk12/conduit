@@ -6,9 +6,7 @@
 
 TEST_CASE("untar") {
 
-  FILE* file = fopen("assets/rick.tar", "r");
-
-  uitsl::untar(file, "assets/rick.tar");
+  uitsl::untar( "assets/rick.tar" );
 
   REQUIRE( uitsl::compare_files( "assets/rick.txt", "rick.txt" ) );
 

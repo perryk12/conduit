@@ -10,6 +10,9 @@
 #include <fstream>
 #include <streambuf>
 
+#include "../../../third-party/Empirical/source/base/errors.h"
+#include "../../../third-party/Empirical/source/tools/string_utils.h"
+
 #include "uitsl/polyfill/filesystem.hpp"
 
 namespace uitsl {
@@ -113,77 +116,94 @@ static int verify_checksum(const char *p) {
 }
 
 /* Extract a tar archive. */
-static void untar(FILE *a, const char *path) {
+static void untar(const std::string filename) {
+
 	char buff[512];
+	FILE *a = fopen(filename.c_str(), "r");
 	FILE *f = NULL;
 	size_t bytes_read;
 	int filesize;
 
-	printf("Extracting from %s\n", path);
 	for (;;) {
+
 		bytes_read = fread(buff, 1, 512, a);
+
 		if (bytes_read < 512) {
-			fprintf(stderr,
-			    "Short read on %s: expected 512, got %d\n",
-			    path, (int)bytes_read);
-			return;
+			const std::string message{ emp::to_string(
+				"Short read on ",
+				filename,
+				": expected 512, got ",
+				bytes_read
+			) };
+			emp::NotifyError( message );
+			throw( message );
 		}
-		if (is_end_of_archive(buff)) {
-			printf("End of %s\n", path);
-			return;
+
+		// end of file
+		if ( is_end_of_archive(buff) ) return;
+
+
+		if ( !verify_checksum(buff) ) {
+			emp::NotifyError( "Checksum failure");
+			throw( "Checksum failure" );
 		}
-		if (!verify_checksum(buff)) {
-			fprintf(stderr, "Checksum failure\n");
-			return;
-		}
+
 		filesize = parseoct(buff + 124, 12);
+
 		switch (buff[156]) {
 		case '1':
-			printf(" Ignoring hardlink %s\n", buff);
+			// Ignoring hardlink
 			break;
 		case '2':
-			printf(" Ignoring symlink %s\n", buff);
+			// Ignoring symlink
 			break;
 		case '3':
-			printf(" Ignoring character device %s\n", buff);
-				break;
+			// Ignoring character device
+			break;
 		case '4':
-			printf(" Ignoring block device %s\n", buff);
+			// Ignoring block device
 			break;
 		case '5':
-			printf(" Extracting dir %s\n", buff);
+			// Extracting dir
 			create_dir(buff, parseoct(buff + 100, 8));
 			filesize = 0;
 			break;
 		case '6':
-			printf(" Ignoring FIFO %s\n", buff);
+			 // Ignoring FIFO
 			break;
 		default:
-			printf(" Extracting file %s\n", buff);
+			// Extracting file
 			f = create_file(buff, parseoct(buff + 100, 8));
 			break;
 		}
+
 		while (filesize > 0) {
 			bytes_read = fread(buff, 1, 512, a);
+
 			if (bytes_read < 512) {
-				fprintf(stderr,
-				    "Short read on %s: Expected 512, got %d\n",
-				    path, (int)bytes_read);
-				return;
+				const std::string message{ emp::to_string(
+					"Short read on ",
+					filename,
+					": expected 512, got ",
+					bytes_read
+				) };
+				emp::NotifyError( message );
+				throw( message );
 			}
-			if (filesize < 512)
-				bytes_read = filesize;
-			if (f != NULL) {
-				if (fwrite(buff, 1, bytes_read, f)
-				    != bytes_read)
-				{
-					fprintf(stderr, "Failed write\n");
-					fclose(f);
-					f = NULL;
-				}
+
+			if (filesize < 512) bytes_read = filesize;
+
+			if (f != NULL && fwrite(buff, 1, bytes_read, f) != bytes_read) {
+				emp::NotifyError( "Failed write" );
+				throw( "Failed write" );
+				fclose(f);
+				f = NULL;
 			}
+
 			filesize -= bytes_read;
+
 		}
+
 		if (f != NULL) {
 			fclose(f);
 			f = NULL;
