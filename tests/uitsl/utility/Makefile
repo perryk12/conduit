@@ -1,6 +1,7 @@
 SHELL := /bin/bash
 
 TARGET_NAMES += NamedArrayElement
+TARGET_NAMES += untar
 
 TO_ROOT := $(shell git rev-parse --show-cdup)
 
