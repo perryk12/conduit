@@ -10,9 +10,11 @@
 #include <string_view>
 
 #include "../../../third-party/Empirical/source/base/errors.h"
+#include "../../../third-party/Empirical/source/base/optional.h"
 #include "../../../third-party/Empirical/source/tools/string_utils.h"
 
-#include "uitsl/polyfill/filesystem.hpp"
+#include "../nonce/ScopeGuard.hpp"
+#include "../polyfill/filesystem.hpp"
 
 namespace uitsl {
 
@@ -29,7 +31,6 @@ namespace internal {
 // alias verbose namespace
 namespace stdfs = std::filesystem;
 
-/// Parse an octal number, ignoring leading and trailing nonsense.
 /// Parse an octal number, ignoring leading and trailing nonsense.
 unsigned int parseoct( const std::string_view view ) {
 	unsigned int res;
@@ -101,145 +102,192 @@ bool try_mkdir( const stdfs::path& path, const stdfs::perms mode ) {
 
 }
 
-/* Create a file, including parent directory as necessary. */
-static FILE* create_file(char *pathname_in, const stdfs::perms mode){
+/// Long filenames are stored as the contents of a LongLink file.
+/// If the file being unpacked had a long filename, change its filename to the
+/// contents of the LongLink file.
+/// @return the path of the file being unpacked, adjusted if necessary
+stdfs::path handle_longlink( const stdfs::path& path ) {
 
-  const auto longlink_path = std::filesystem::path("@LongLink");
-  std::string pathname(pathname_in);
+	if (
+		// if this path isn't @LongLink...
+		stdfs::path("@LongLink") != stdfs::path(path)
+		// ... and there exists an @LongLink file
+		&& stdfs::exists( stdfs::path("@LongLink") )
+	) {
 
-  if (
-    // if this pathname_in isn't @LongLink...
-    longlink_path != std::filesystem::path(pathname_in)
-    // ... and there exists an @LongLink file
-    && std::filesystem::exists(longlink_path)
-  ) {
+		// then set the pathname to the contents of @LongLink...
+		std::ifstream longlink_stream( stdfs::path("@LongLink") );
+		const std::string res{
+			std::istreambuf_iterator<char>(longlink_stream),
+			std::istreambuf_iterator<char>()
+		};
+		// ... and delete the @LongLink file
+		stdfs::remove( stdfs::path("@LongLink") );
 
-    // then set the pathname to the contents of @LongLink...
-    std::ifstream longlink_stream(longlink_path);
-    pathname = std::string(
-      std::istreambuf_iterator<char>(longlink_stream),
-      std::istreambuf_iterator<char>()
-    );
-    // ... and delete the @LongLink file
-    std::filesystem::remove(longlink_path);
-  }
+		return res;
+	} else return path;
 
-	FILE *f;
-	f = fopen(pathname.c_str(), "wb+");
-	if (f == nullptr) {
-		/* Try creating parent dir and then creating file. */
-		try_mkdir(
-      std::filesystem::path(pathname).parent_path().c_str(),
-      stdfs::perms{ 0755 }
-    );
-		f = fopen(pathname.c_str(), "wb+");
-  }
-
-	return (f);
 }
 
-/// Extract 512 bytes of a tar file.
-static bool untar_chunk(FILE* source, const std::string filename) {
+/// Create a file, including parent directory as necessary.
+FILE* create_file( const stdfs::path& target, const stdfs::perms mode ) {
 
-	FILE *f = nullptr;
+	const stdfs::path path{ handle_longlink( target ) };
+
+	if ( const auto parent_path{ path.parent_path() }; !parent_path.empty() ) {
+		const auto res = try_mkdir( parent_path, stdfs::perms{ 0755 } );
+		if ( res == false ) return nullptr;
+	}
+
+	FILE* res = std::fopen(path.c_str(), "wb+");
+
+	if ( !try_set_perms( path, mode ) ) {
+		std::fclose( res );
+		return nullptr;
+	} else return res;
+
+}
+
+/// @return true on success, false on failure
+bool unpack_file_chunk(FILE* source, FILE* dest, const size_t bytes_remaining) {
 
 	char buff[512];
-	const std::string_view buff_view{ buff, 512 };
 
-	size_t bytes_read{ fread(buff, 1, 512, source) };
+	const size_t bytes_traversed{ std::fread( buff, 1, 512, source ) };
 
-	if (bytes_read < 512) {
-		const std::string message{ emp::to_string(
-			"Short read on ", filename,
-			": expected 512, got ", bytes_read
-		) };
-		emp::NotifyError( message );
-		throw( message );
+	if ( bytes_traversed < 512 ) {
+		emp::NotifyError( emp::to_string(
+			"short read: expected 512 bytes, got ", bytes_traversed
+		) );
+		return false;
 	}
 
-	// end of file
-	if ( is_end_of_archive(buff_view) ) return false;
+	const size_t bytes_read{ std::min( bytes_remaining, bytes_traversed ) };
 
-	if ( !verify_checksum(buff_view) ) {
-		emp::NotifyError( "Checksum failure" );
-		throw( "Checksum failure" );
-	}
-
-	size_t filesize{ parseoct({buff + 124, 12}) };
-
-	const auto perms{ stdfs::perms{ parseoct({buff + 100, 8}) } };
-
-	switch (buff[156]) {
-	case '1':
-		// Ignoring hardlink
-		break;
-	case '2':
-		// Ignoring symlink
-		break;
-	case '3':
-		// Ignoring character device
-		break;
-	case '4':
-		// Ignoring block device
-		break;
-	case '5':
-		// Extracting dir
-		try_mkdir(buff, perms );
-		filesize = 0;
-		break;
-	case '6':
-		 // Ignoring FIFO
-		break;
-	default:
-		// Extracting file
-		f = create_file(buff, perms );
-		break;
-	}
-
-	while (filesize > 0) {
-		bytes_read = fread(buff, 1, 512, source);
-
-		if (bytes_read < 512) {
-			const std::string message{ emp::to_string(
-				"Short read on ",
-				filename,
-				": expected 512, got ",
-				bytes_read
-			) };
-			emp::NotifyError( message );
-			throw( message );
-		}
-
-		if (filesize < 512) bytes_read = filesize;
-
-		if (f != nullptr && fwrite(buff, 1, bytes_read, f) != bytes_read) {
-			emp::NotifyError( "Failed write" );
-			throw( "Failed write" );
-			std::fclose(f);
-			f = nullptr;
-		}
-
-		filesize -= bytes_read;
-
-	}
-
-	if (f != nullptr) {
-		std::fclose(f);
-		f = nullptr;
+	if ( std::fwrite(buff, 1, bytes_read, dest) != bytes_read ) {
+		emp::NotifyError( "failed write" );
+		return false;
 	}
 
 	return true;
 
 }
 
+
+/// @return true on success, false on failure
+bool try_unpack_file( FILE* source, FILE* dest, const size_t filesize ) {
+
+	if (dest == nullptr) return false; // failure, bad file handle
+
+	const uitsl::ScopeGuard guard{ [](){}, [&dest](){ std::fclose( dest ); } };
+
+	for (
+		size_t remaining = filesize;
+		remaining > 0;
+		remaining -= std::min(512ul, remaining)
+	) {
+
+		if ( unpack_file_chunk( source, dest, remaining ) ) continue; // keep going
+		else return false; // failure in unpack_file_chunk
+
+	}
+
+	return true; // success
+
+}
+
+bool try_skip(
+	const std::string category,
+	const stdfs::path path,
+	FILE* source,
+	const size_t size
+) {
+
+	emp::NotifyWarning( emp::to_string( "ignoring ", category, " ", path ) );
+
+	for ( size_t consumed = 0; consumed < size; consumed += 512 ) {
+
+		static char ignore[512];
+		if (const size_t read = std::fread(ignore, 1, 512, source); read < 512) {
+			emp::NotifyError( emp::to_string(
+				"short read: expected 512 bytes, got ", read
+			) );
+			return false; // failure
+		}	else continue; // keep going
+
+	}
+
+	return true; // success
+
+}
+
+/// @return true on success, false on failure
+bool try_unpack_chunk( const std::string_view buff, FILE* source ) {
+
+	const stdfs::path path{ std::string{ buff.data() } };
+	const stdfs::perms perms{ parseoct( buff.substr(100, 8) ) };
+	const size_t size{ parseoct( buff.substr(124, 12) ) };
+
+	switch ( buff[156] ) {
+		case '1': return try_skip("hardlink", path, source, size);
+		case '2': return try_skip("symlink", path, source, size);
+		case '3': return try_skip("character device", path, source, size);
+		case '4': return try_skip("block device", path, source, size);
+		case '5': return try_mkdir(path, perms);
+		case '6': return try_skip("FIFO", path, source, size);
+		default: return try_unpack_file( source, create_file(path, perms), size );
+	}
+
+}
+
+/// Process chunk of a tar file.
+/// @return true if complete, false if incomplete, nullopt on failure
+emp::optional<bool> try_process_chunk( FILE* source ) {
+
+	char buff[512];
+	std::string_view buff_view{ buff, 512 };
+
+	const size_t bytes_read{ std::fread(buff, 1, 512, source) };
+
+	if (bytes_read < 512) {
+		emp::NotifyError( emp::to_string(
+			"short read: expected 512, got ", bytes_read
+		) );
+		return std::nullopt; // failure
+	}
+
+	if ( is_end_of_archive( buff_view ) ) return true; // success
+
+	if ( verify_checksum( buff_view ) == false ) {
+		emp::NotifyError( "checksum failure" );
+		return std::nullopt;
+	}
+
+	// failure
+	if ( try_unpack_chunk( buff_view, source ) == false ) return std::nullopt;
+
+	// keep going
+	return false;
+
+}
+
 } // namespace internal
 
-/* Extract a tar archive. */
-static void untar(const std::string filename) {
+/// Extract a tar archive.
+/// @return true on success, false on failure
+bool untar(const std::string filename) {
 
 	FILE *source = std::fopen(filename.c_str(), "r");
+	const uitsl::ScopeGuard guard{[](){}, [&source](){ std::fclose( source ); } };
 
-	while ( internal::untar_chunk( source, filename ) );
+	while ( true ) {
+		const auto res{ internal::try_process_chunk( source ) };
+
+		if ( res == std::nullopt ) return false; // failure
+		else if ( *res ) return true; // success
+		else continue; // not done yet, keep going
+
+	};
 
 }
 
