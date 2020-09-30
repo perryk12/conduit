@@ -2,6 +2,7 @@
 #ifndef UITSL_UTILITY_UNTAR_HPP_INCLUDE
 #define UITSL_UTILITY_UNTAR_HPP_INCLUDE
 
+#include <charconv>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,30 +26,20 @@ namespace uitsl {
  * Released into the public domain.
  */
 
-/// Parse an octal number, ignoring leading and trailing nonsense.
-static int parseoct(const char *p, size_t n) {
-	int i = 0;
+namespace internal {
 
-	while ((*p < '0' || *p > '7') && n > 0) {
-		++p;
-		--n;
-	}
-	while (*p >= '0' && *p <= '7' && n > 0) {
-		i *= 8;
-		i += *p - '0';
-		++p;
-		--n;
-	}
-	return (i);
+/// Parse an octal number, ignoring leading and trailing nonsense.
+static int parseoct(const std::string_view view) {
+
+	int res;
+	std::from_chars( std::begin(view), std::end(view), res, 8 );
+	return res;
+
 }
 
 /// Returns true if this is 512 zero bytes.
-static int is_end_of_archive(const char *p) {
-	int n;
-	for (n = 511; n >= 0; --n)
-		if (p[n] != '\0')
-			return (0);
-	return (1);
+static bool is_end_of_archive(const char *p) {
+	return std::all_of( p, p + 512, [](const auto& val){ return val == '\0'; });
 }
 
 /* Create a directory, including parent directories as necessary. */
@@ -72,10 +63,6 @@ static FILE* create_file(char *pathname_in, int mode){
     // ... and there exists an @LongLink file
     && std::filesystem::exists(longlink_path)
   ) {
-
-    std::cout << " @LongLink detected" << std::endl;
-    std::cout << " Renaming " << pathname_in << " to @LongLink contents";
-    std::cout << std::endl;
 
     // then set the pathname to the contents of @LongLink...
     std::ifstream longlink_stream(longlink_path);
@@ -105,14 +92,11 @@ static FILE* create_file(char *pathname_in, int mode){
 static int verify_checksum(const char *p) {
 	int n, u = 0;
 	for (n = 0; n < 512; ++n) {
-		if (n < 148 || n > 155)
-			/* Standard tar checksum adds unsigned bytes. */
-			u += ((unsigned char *)p)[n];
-		else
-			u += 0x20;
-
+		/* Standard tar checksum adds unsigned bytes. */
+		if (n < 148 || n > 155) u += ((unsigned char *)p)[n];
+		else u += 0x20;
 	}
-	return (u == parseoct(p + 148, 8));
+	return (u == parseoct({p + 148, 8}));
 }
 
 /* Extract 512 bytes of a tar file */
@@ -143,7 +127,7 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 		throw( "Checksum failure" );
 	}
 
-	int filesize{ parseoct(buff + 124, 12) };
+	int filesize{ parseoct({buff + 124, 12}) };
 
 	switch (buff[156]) {
 	case '1':
@@ -160,7 +144,7 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 		break;
 	case '5':
 		// Extracting dir
-		create_dir(buff, parseoct(buff + 100, 8));
+		create_dir(buff, parseoct({buff + 100, 8}));
 		filesize = 0;
 		break;
 	case '6':
@@ -168,7 +152,7 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 		break;
 	default:
 		// Extracting file
-		f = create_file(buff, parseoct(buff + 100, 8));
+		f = create_file(buff, parseoct({buff + 100, 8}));
 		break;
 	}
 
@@ -208,12 +192,14 @@ static bool untar_chunk(FILE* source, const std::string filename) {
 
 }
 
+} // namespace internal
+
 /* Extract a tar archive. */
 static void untar(const std::string filename) {
 
 	FILE *source = fopen(filename.c_str(), "r");
 
-	while ( untar_chunk( source, filename ) );
+	while ( internal::untar_chunk( source, filename ) );
 
 }
 
