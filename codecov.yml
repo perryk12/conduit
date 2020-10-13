@@ -1,5 +1,5 @@
 codecov:
-  token: 358075b0-4263-46c8-bd98-04ea18aed06a
+  token: 162c7446-380b-4bc2-85ed-6939a3d761ff
 
 ignore:
   - "include/uitsl/routine_functors.hpp"
