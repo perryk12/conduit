@@ -1,4 +1,6 @@
 #pragma once
+#ifndef UIT_DUCTS_PROC_IMPL_INLET_PUT_GROWING_TYPE_TRIVIAL_T__PUTDUCT_HPP_INCLUDE
+#define UIT_DUCTS_PROC_IMPL_INLET_PUT_GROWING_TYPE_TRIVIAL_T__PUTDUCT_HPP_INCLUDE
 
 #include <algorithm>
 #include <array>
@@ -11,8 +13,8 @@
 #include "../../../../../../../third-party/Empirical/source/tools/string_utils.h"
 
 #include "../../../../../../uitsl/debug/WarnOnce.hpp"
-#include "../../../../../../uitsl/distributed/RdmaWindowManager.hpp"
 #include "../../../../../../uitsl/distributed/RdmaPacket.hpp"
+#include "../../../../../../uitsl/distributed/RdmaWindowManager.hpp"
 #include "../../../../../../uitsl/meta/t::static_test.hpp"
 #include "../../../../../../uitsl/mpi/mpi_utils.hpp"
 #include "../../../../../../uitsl/mpi/Request.hpp"
@@ -139,3 +141,5 @@ public:
 
 } // namespace t
 } // namespace uit
+
+#endif // #ifndef UIT_DUCTS_PROC_IMPL_INLET_PUT_GROWING_TYPE_TRIVIAL_T__PUTDUCT_HPP_INCLUDE

@@ -1,10 +1,12 @@
 #pragma once
+#ifndef UITSL_DISTRIBUTED_MSGACCUMULATORBUNDLE_HPP_INCLUDE
+#define UITSL_DISTRIBUTED_MSGACCUMULATORBUNDLE_HPP_INCLUDE
 
 #include <algorithm>
 #include <cstring>
 
-#include "../../../third-party/Empirical/source/polyfill/span.h"
 #include "../../../third-party/Empirical/source/base/vector.h"
+#include "../../../third-party/Empirical/source/polyfill/span.h"
 
 #include "../math/divide_utils.hpp"
 
@@ -117,3 +119,5 @@ public:
 };
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_DISTRIBUTED_MSGACCUMULATORBUNDLE_HPP_INCLUDE

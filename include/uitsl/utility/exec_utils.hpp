@@ -1,3 +1,7 @@
+#pragma once
+#ifndef UITSL_UTILITY_EXEC_UTILS_HPP_INCLUDE
+#define UITSL_UTILITY_EXEC_UTILS_HPP_INCLUDE
+
 #include <array>
 #include <cstdio>
 #include <iostream>
@@ -24,3 +28,5 @@ std::string exec(const char* cmd) {
 }
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_UTILITY_EXEC_UTILS_HPP_INCLUDE

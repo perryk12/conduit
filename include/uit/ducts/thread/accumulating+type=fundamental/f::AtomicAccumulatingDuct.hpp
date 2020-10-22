@@ -1,9 +1,11 @@
 #pragma once
+#ifndef UIT_DUCTS_THREAD_ACCUMULATING_TYPE_FUNDAMENTAL_F__ATOMICACCUMULATINGDUCT_HPP_INCLUDE
+#define UIT_DUCTS_THREAD_ACCUMULATING_TYPE_FUNDAMENTAL_F__ATOMICACCUMULATINGDUCT_HPP_INCLUDE
 
 #include <limits>
 #include <stddef.h>
-#include <utility>
 #include <string>
+#include <utility>
 
 #include "../../../../../third-party/Empirical/source/base/assert.h"
 #include "../../../../../third-party/Empirical/source/tools/string_utils.h"
@@ -103,3 +105,5 @@ public:
 
 } // namespace f
 } // namespace uit
+
+#endif // #ifndef UIT_DUCTS_THREAD_ACCUMULATING_TYPE_FUNDAMENTAL_F__ATOMICACCUMULATINGDUCT_HPP_INCLUDE

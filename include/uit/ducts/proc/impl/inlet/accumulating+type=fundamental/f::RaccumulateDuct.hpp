@@ -1,4 +1,6 @@
 #pragma once
+#ifndef UIT_DUCTS_PROC_IMPL_INLET_ACCUMULATING_TYPE_FUNDAMENTAL_F__RACCUMULATEDUCT_HPP_INCLUDE
+#define UIT_DUCTS_PROC_IMPL_INLET_ACCUMULATING_TYPE_FUNDAMENTAL_F__RACCUMULATEDUCT_HPP_INCLUDE
 
 #include <algorithm>
 #include <array>
@@ -7,14 +9,14 @@
 
 #include <mpi.h>
 
-#include "../../../../../../../third-party/Empirical/source/base/assert.h"
 #include "../../../../../../../third-party/Empirical/source/base/array.h"
+#include "../../../../../../../third-party/Empirical/source/base/assert.h"
 #include "../../../../../../../third-party/Empirical/source/base/vector.h"
 #include "../../../../../../../third-party/Empirical/source/tools/string_utils.h"
 
 #include "../../../../../../uitsl/debug/WarnOnce.hpp"
-#include "../../../../../../uitsl/distributed/RdmaWindowManager.hpp"
 #include "../../../../../../uitsl/distributed/RdmaAccumulatorPacket.hpp"
+#include "../../../../../../uitsl/distributed/RdmaWindowManager.hpp"
 #include "../../../../../../uitsl/meta/f::static_test.hpp"
 #include "../../../../../../uitsl/mpi/mpi_utils.hpp"
 #include "../../../../../../uitsl/mpi/Request.hpp"
@@ -158,3 +160,5 @@ public:
 
 } // namespace f
 } // namespace uit
+
+#endif // #ifndef UIT_DUCTS_PROC_IMPL_INLET_ACCUMULATING_TYPE_FUNDAMENTAL_F__RACCUMULATEDUCT_HPP_INCLUDE

@@ -1,10 +1,12 @@
 #pragma once
+#ifndef UITSL_PARALLEL_THREADIBARRIERFACTORY_HPP_INCLUDE
+#define UITSL_PARALLEL_THREADIBARRIERFACTORY_HPP_INCLUDE
 
 #include <memory>
 #include <stddef.h>
 
-#include "_ThreadIbarrierManager.hpp"
 #include "ThreadIbarrier.hpp"
+#include "_ThreadIbarrierManager.hpp"
 
 namespace uitsl {
 
@@ -23,3 +25,5 @@ public:
 };
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_PARALLEL_THREADIBARRIERFACTORY_HPP_INCLUDE

@@ -1,4 +1,6 @@
 #pragma once
+#ifndef UIT_DUCTS_PROC_IMPL_OUTLET_GET_STEPPING_TYPE_CEREAL_C__IPROBEDUCT_HPP_INCLUDE
+#define UIT_DUCTS_PROC_IMPL_OUTLET_GET_STEPPING_TYPE_CEREAL_C__IPROBEDUCT_HPP_INCLUDE
 
 #include <algorithm>
 #include <array>
@@ -9,8 +11,8 @@
 
 #include "../../../../../../../third-party/cereal/include/cereal/archives/binary.hpp"
 #include "../../../../../../../third-party/Empirical/source/base/assert.h"
-#include "../../../../../../../third-party/Empirical/source/base/vector.h"
 #include "../../../../../../../third-party/Empirical/source/base/optional.h"
+#include "../../../../../../../third-party/Empirical/source/base/vector.h"
 #include "../../../../../../../third-party/Empirical/source/tools/MemoryIStream.h"
 #include "../../../../../../../third-party/Empirical/source/tools/string_utils.h"
 
@@ -191,3 +193,5 @@ public:
 
 } // namespace c
 } // namespace uit
+
+#endif // #ifndef UIT_DUCTS_PROC_IMPL_OUTLET_GET_STEPPING_TYPE_CEREAL_C__IPROBEDUCT_HPP_INCLUDE

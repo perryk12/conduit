@@ -1,12 +1,14 @@
 #pragma once
+#ifndef UITSL_DATASTRUCTS_SIFTINGARRAY_HPP_INCLUDE
+#define UITSL_DATASTRUCTS_SIFTINGARRAY_HPP_INCLUDE
 
 #include <algorithm>
 #include <array>
 #include <functional>
 #include <utility>
 
-#include "../../../third-party/Empirical/source/base/assert.h"
 #include "../../../third-party/Empirical/source/base/array.h"
+#include "../../../third-party/Empirical/source/base/assert.h"
 
 namespace uitsl {
 
@@ -104,3 +106,5 @@ public:
 
 
 }
+
+#endif // #ifndef UITSL_DATASTRUCTS_SIFTINGARRAY_HPP_INCLUDE

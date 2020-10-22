@@ -1,10 +1,12 @@
 #pragma once
+#ifndef UIT_DUCTS_THREAD_ACCUMULATING_TYPE_ANY_A__MUTEXACCUMULATINGDUCT_HPP_INCLUDE
+#define UIT_DUCTS_THREAD_ACCUMULATING_TYPE_ANY_A__MUTEXACCUMULATINGDUCT_HPP_INCLUDE
 
 #include <limits>
 #include <mutex>
 #include <stddef.h>
-#include <utility>
 #include <string>
+#include <utility>
 
 #include "../../../../../third-party/Empirical/source/base/assert.h"
 #include "../../../../../third-party/Empirical/source/tools/string_utils.h"
@@ -107,3 +109,5 @@ public:
 
 } // namespace a
 } // namespace uit
+
+#endif // #ifndef UIT_DUCTS_THREAD_ACCUMULATING_TYPE_ANY_A__MUTEXACCUMULATINGDUCT_HPP_INCLUDE

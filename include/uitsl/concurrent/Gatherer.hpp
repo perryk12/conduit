@@ -1,4 +1,6 @@
 #pragma once
+#ifndef UITSL_CONCURRENT_GATHERER_HPP_INCLUDE
+#define UITSL_CONCURRENT_GATHERER_HPP_INCLUDE
 
 #include <algorithm>
 #include <numeric>
@@ -6,12 +8,12 @@
 
 #include <mpi.h>
 
-#include "../../../third-party/Empirical/source/base/vector.h"
 #include "../../../third-party/Empirical/source/base/optional.h"
+#include "../../../third-party/Empirical/source/base/vector.h"
 
 #include "../containers/safe/deque.hpp"
-#include "../mpi/mpi_utils.hpp"
 #include "../mpi/audited_routines.hpp"
+#include "../mpi/mpi_utils.hpp"
 
 namespace uitsl {
 
@@ -139,3 +141,5 @@ public:
 };
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_CONCURRENT_GATHERER_HPP_INCLUDE

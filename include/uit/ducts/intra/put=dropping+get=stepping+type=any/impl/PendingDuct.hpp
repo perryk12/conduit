@@ -1,4 +1,6 @@
 #pragma once
+#ifndef UIT_DUCTS_INTRA_PUT_DROPPING_GET_STEPPING_TYPE_ANY_IMPL_PENDINGDUCT_HPP_INCLUDE
+#define UIT_DUCTS_INTRA_PUT_DROPPING_GET_STEPPING_TYPE_ANY_IMPL_PENDINGDUCT_HPP_INCLUDE
 
 #include <stddef.h>
 #include <string>
@@ -6,8 +8,8 @@
 #include "../../../../../../third-party/Empirical/source/base/assert.h"
 #include "../../../../../../third-party/Empirical/source/tools/string_utils.h"
 
-#include "../../../../../uitsl/meta/a::static_test.hpp"
 #include "../../../../../uitsl/debug/occupancy_audit.hpp"
+#include "../../../../../uitsl/meta/a::static_test.hpp"
 #include "../../../../../uitsl/nonce/CircularIndex.hpp"
 #include "../../../../../uitsl/utility/print_utils.hpp"
 
@@ -157,3 +159,5 @@ public:
 
 } // namespace internal
 } // namespace uit
+
+#endif // #ifndef UIT_DUCTS_INTRA_PUT_DROPPING_GET_STEPPING_TYPE_ANY_IMPL_PENDINGDUCT_HPP_INCLUDE

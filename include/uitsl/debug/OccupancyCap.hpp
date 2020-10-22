@@ -1,12 +1,14 @@
 #pragma once
+#ifndef UITSL_DEBUG_OCCUPANCYCAP_HPP_INCLUDE
+#define UITSL_DEBUG_OCCUPANCYCAP_HPP_INCLUDE
 
 #include <limits>
 #include <mutex>
 #include <stddef.h>
 #include <unordered_set>
 
-#include "../utility/print_utils.hpp"
 #include "../parallel/thread_utils.hpp"
+#include "../utility/print_utils.hpp"
 
 namespace uitsl {
 
@@ -70,3 +72,5 @@ public:
 };
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_DEBUG_OCCUPANCYCAP_HPP_INCLUDE

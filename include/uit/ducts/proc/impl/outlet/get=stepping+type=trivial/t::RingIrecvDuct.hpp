@@ -1,4 +1,6 @@
 #pragma once
+#ifndef UIT_DUCTS_PROC_IMPL_OUTLET_GET_STEPPING_TYPE_TRIVIAL_T__RINGIRECVDUCT_HPP_INCLUDE
+#define UIT_DUCTS_PROC_IMPL_OUTLET_GET_STEPPING_TYPE_TRIVIAL_T__RINGIRECVDUCT_HPP_INCLUDE
 
 #include <algorithm>
 #include <array>
@@ -10,12 +12,12 @@
 #include "../../../../../../../third-party/Empirical/source/base/assert.h"
 #include "../../../../../../../third-party/Empirical/source/tools/string_utils.h"
 
+#include "../../../../../../uitsl/datastructs/RingBuffer.hpp"
+#include "../../../../../../uitsl/datastructs/SiftingArray.hpp"
 #include "../../../../../../uitsl/debug/err_audit.hpp"
 #include "../../../../../../uitsl/meta/t::static_test.hpp"
 #include "../../../../../../uitsl/mpi/mpi_utils.hpp"
-#include "../../../../../../uitsl/datastructs/SiftingArray.hpp"
 #include "../../../../../../uitsl/utility/print_utils.hpp"
-#include "../../../../../../uitsl/datastructs/RingBuffer.hpp"
 
 #include "../../../../../setup/InterProcAddress.hpp"
 
@@ -221,3 +223,5 @@ public:
 
 } // namespace t
 } // namespace uit
+
+#endif // #ifndef UIT_DUCTS_PROC_IMPL_OUTLET_GET_STEPPING_TYPE_TRIVIAL_T__RINGIRECVDUCT_HPP_INCLUDE

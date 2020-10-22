@@ -1,7 +1,9 @@
 #pragma once
+#ifndef UITSL_DATASTRUCTS_MIRROREDRINGBUFFER_HPP_INCLUDE
+#define UITSL_DATASTRUCTS_MIRROREDRINGBUFFER_HPP_INCLUDE
 
-#include <unistd.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 #include "../../../third-party/Empirical/source/polyfill/span.h"
 
@@ -152,3 +154,5 @@ public:
 };
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_DATASTRUCTS_MIRROREDRINGBUFFER_HPP_INCLUDE

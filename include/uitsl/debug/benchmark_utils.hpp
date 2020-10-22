@@ -1,4 +1,6 @@
 #pragma once
+#ifndef UITSL_DEBUG_BENCHMARK_UTILS_HPP_INCLUDE
+#define UITSL_DEBUG_BENCHMARK_UTILS_HPP_INCLUDE
 
 #include <random>
 
@@ -44,7 +46,8 @@ inline void do_compute_work(const size_t amt=1) {
   );
 
   for (size_t i = 0; i < amt; ++i) {
-    if (rand() == 0) std::cerr << "do not optimize" << std::endl;
+    const auto res = rand();
+    uitsl::do_not_optimize( res );
   }
 
 }
@@ -75,3 +78,5 @@ benchmark::internal::Benchmark* report_confidence(
 }
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_DEBUG_BENCHMARK_UTILS_HPP_INCLUDE

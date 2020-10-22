@@ -1,9 +1,11 @@
 #pragma once
+#ifndef UITSL_PARALLEL_THREAD_UTILS_HPP_INCLUDE
+#define UITSL_PARALLEL_THREAD_UTILS_HPP_INCLUDE
 
 #include <atomic>
 #include <limits>
-#include <thread>
 #include <stddef.h>
+#include <thread>
 
 #include "../../../third-party/Empirical/source/base/assert.h"
 
@@ -29,3 +31,5 @@ size_t get_nproc() {
 }
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_PARALLEL_THREAD_UTILS_HPP_INCLUDE

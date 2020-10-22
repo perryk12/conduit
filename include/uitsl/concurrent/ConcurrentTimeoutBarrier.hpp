@@ -1,11 +1,13 @@
 #pragma once
+#ifndef UITSL_CONCURRENT_CONCURRENTTIMEOUTBARRIER_HPP_INCLUDE
+#define UITSL_CONCURRENT_CONCURRENTTIMEOUTBARRIER_HPP_INCLUDE
 
 #include <thread>
 
 #include <mpi.h>
 
-#include "../mpi/mpi_utils.hpp"
 #include "../countdown/Timer.hpp"
+#include "../mpi/mpi_utils.hpp"
 #include "../parallel/ParallelTimeoutBarrier.hpp"
 #include "../parallel/ThreadIbarrier.hpp"
 
@@ -47,3 +49,5 @@ public:
 };
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_CONCURRENT_CONCURRENTTIMEOUTBARRIER_HPP_INCLUDE

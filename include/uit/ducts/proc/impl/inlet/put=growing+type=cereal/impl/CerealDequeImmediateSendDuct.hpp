@@ -1,11 +1,13 @@
 #pragma once
+#ifndef UIT_DUCTS_PROC_IMPL_INLET_PUT_GROWING_TYPE_CEREAL_IMPL_CEREALDEQUEIMMEDIATESENDDUCT_HPP_INCLUDE
+#define UIT_DUCTS_PROC_IMPL_INLET_PUT_GROWING_TYPE_CEREAL_IMPL_CEREALDEQUEIMMEDIATESENDDUCT_HPP_INCLUDE
 
 #include <algorithm>
 #include <memory>
-#include <tuple>
-#include <utility>
 #include <stddef.h>
 #include <string>
+#include <tuple>
+#include <utility>
 
 #include <mpi.h>
 
@@ -155,3 +157,5 @@ public:
 
 } // namespace internal
 } // namespace uit
+
+#endif // #ifndef UIT_DUCTS_PROC_IMPL_INLET_PUT_GROWING_TYPE_CEREAL_IMPL_CEREALDEQUEIMMEDIATESENDDUCT_HPP_INCLUDE

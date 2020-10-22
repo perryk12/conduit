@@ -1,10 +1,12 @@
 #pragma once
+#ifndef UITSL_COUNTDOWN_PROGRESSBAR_HPP_INCLUDE
+#define UITSL_COUNTDOWN_PROGRESSBAR_HPP_INCLUDE
 
 #include <chrono>
 #include <iostream>
-#include <utility>
 #include <sstream>
 #include <string>
+#include <utility>
 
 #include "../chrono/chrono_utils.hpp"
 #include "../chrono/CoarseClock.hpp"
@@ -149,3 +151,5 @@ public:
 };
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_COUNTDOWN_PROGRESSBAR_HPP_INCLUDE

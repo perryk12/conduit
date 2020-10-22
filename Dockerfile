@@ -9,6 +9,15 @@ SHELL ["/bin/bash", "-c"]
 # adapted from https://askubuntu.com/a/1013396
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN \
+  echo 'Acquire::http::Timeout "60";' >> "/etc/apt/apt.conf.d/99timeout" \
+    && \
+  echo 'Acquire::ftp::Timeout "60";' >> "/etc/apt/apt.conf.d/99timeout" \
+    && \
+  echo 'Acquire::Retries "100";' >> "/etc/apt/apt.conf.d/99timeout" \
+    && \
+  echo "buffed apt-get resiliency"
+
 # Install.
 RUN \
   apt-get update -qq \
@@ -26,8 +35,19 @@ RUN \
     && \
   echo "installed fundamentals"
 
+# adapted in part from https://askubuntu.com/a/916451
 RUN \
-  apt-get install -qq software-properties-common \
+  rm /etc/apt/apt.conf.d/docker-gzip-indexes \
+    && \
+  apt-get purge apt-show-versions \
+    && \
+  rm /var/lib/apt/lists/*lz4 \
+    && \
+  apt-get -o Acquire::GzipIndexes=false update \
+    && \
+  apt-get install -qq \
+    software-properties-common \
+    apt-show-versions \
     && \
   add-apt-repository -y ppa:ubuntu-toolchain-r/test \
     && \
@@ -157,6 +177,7 @@ RUN \
     python-slugify  \
     iterpop  \
     exdown \
+    networkx==2.5 \
     && \
   echo "installed Python packages"
 

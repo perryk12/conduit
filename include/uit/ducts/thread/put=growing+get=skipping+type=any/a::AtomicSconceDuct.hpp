@@ -1,10 +1,12 @@
 #pragma once
+#ifndef UIT_DUCTS_THREAD_PUT_GROWING_GET_SKIPPING_TYPE_ANY_A__ATOMICSCONCEDUCT_HPP_INCLUDE
+#define UIT_DUCTS_THREAD_PUT_GROWING_GET_SKIPPING_TYPE_ANY_A__ATOMICSCONCEDUCT_HPP_INCLUDE
 
 #include <atomic>
 #include <limits>
 #include <stddef.h>
-#include <utility>
 #include <string>
+#include <utility>
 
 #include "../../../../../third-party/Empirical/source/base/assert.h"
 #include "../../../../../third-party/Empirical/source/tools/string_utils.h"
@@ -120,3 +122,5 @@ public:
 
 } // namespace a
 } // namespace uit
+
+#endif // #ifndef UIT_DUCTS_THREAD_PUT_GROWING_GET_SKIPPING_TYPE_ANY_A__ATOMICSCONCEDUCT_HPP_INCLUDE

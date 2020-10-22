@@ -1,4 +1,6 @@
 #pragma once
+#ifndef UITSL_DEBUG_SAFE_CAST_HPP_INCLUDE
+#define UITSL_DEBUG_SAFE_CAST_HPP_INCLUDE
 
 #include <limits>
 #include <stddef.h>
@@ -9,7 +11,7 @@ namespace uitsl {
 
 // adapted from https://stackoverflow.com/a/49658950
 template<typename Dst, typename Src>
-inline Dst safe_cast(Src value)
+inline Dst safe_cast(const Src value)
 {
     typedef std::numeric_limits<Dst> DstLim;
     typedef std::numeric_limits<Src> SrcLim;
@@ -65,3 +67,5 @@ inline Dst safe_cast(Src value)
 }
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_DEBUG_SAFE_CAST_HPP_INCLUDE

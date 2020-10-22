@@ -1,4 +1,6 @@
 #pragma once
+#ifndef UITSL_PARALLEL_RECURSIVEMUTEX_HPP_INCLUDE
+#define UITSL_PARALLEL_RECURSIVEMUTEX_HPP_INCLUDE
 
 #include <shared_mutex>
 
@@ -10,7 +12,7 @@ class RecursiveExclusiveLock;
 
 class RecursiveMutex {
 
-  friend class uit::RecursiveExclusiveLock;
+  friend class uitsl::RecursiveExclusiveLock;
 
   std::shared_mutex mutex;
   uitsl::thread_id_t mutex_owner{ uitsl::max_thread };
@@ -36,3 +38,5 @@ public:
 };
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_PARALLEL_RECURSIVEMUTEX_HPP_INCLUDE

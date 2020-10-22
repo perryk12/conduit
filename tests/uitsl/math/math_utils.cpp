@@ -6,6 +6,15 @@
 
 #include "uitsl/math/math_utils.hpp"
 
+TEST_CASE("Test sum") {
+
+  REQUIRE( uitsl::sum(1, 2, 3, 0) == 6 );
+
+  REQUIRE( uitsl::sum(1.0, 2.0, 3.0, 0.5) == 6.5 );
+
+}
+
+
 TEST_CASE("Test mod") {
 
   REQUIRE( uitsl::mod(-11, 10) == 9 );
@@ -290,9 +299,9 @@ TEST_CASE("difference") {
 
 TEST_CASE("sidebyside_hash") {
 
-  std::unordered_set<int> results;
+  std::unordered_set<size_t> results;
 
-  constexpr int n = 100;
+  constexpr size_t n = 100;
   for (size_t a = 0; a < n; ++a) {
     for (size_t b = 0; b < n; ++b) {
       results.insert(uitsl::sidebyside_hash(a, b));

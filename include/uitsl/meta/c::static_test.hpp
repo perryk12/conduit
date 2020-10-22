@@ -1,9 +1,11 @@
 #pragma once
+#ifndef UITSL_META_C__STATIC_TEST_HPP_INCLUDE
+#define UITSL_META_C__STATIC_TEST_HPP_INCLUDE
 
 #include <type_traits>
 
-#include "../../../third-party/cereal/include/cereal/cereal.hpp"
 #include "../../../third-party/cereal/include/cereal/archives/binary.hpp"
+#include "../../../third-party/cereal/include/cereal/cereal.hpp"
 
 #include "decay_equiv.hpp"
 
@@ -31,3 +33,5 @@ constexpr bool static_test() { return StaticTest<T>::value; }
 
 } // namespace c
 } // namespace uitsl
+
+#endif // #ifndef UITSL_META_C__STATIC_TEST_HPP_INCLUDE

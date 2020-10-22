@@ -1,4 +1,6 @@
 #pragma once
+#ifndef UITSL_CHRONO_COARSECLOCK_HPP_INCLUDE
+#define UITSL_CHRONO_COARSECLOCK_HPP_INCLUDE
 
 #include <algorithm>
 #include <chrono>
@@ -20,7 +22,7 @@ struct CoarseClock {
   // The representation type of C1::duration.
   using rep = std::time_t;
 
-	// A specialization of std::ratio.
+  // A specialization of std::ratio.
   // The tick period of the clock in seconds.
   using period = std::ratio<1, 1>;
 
@@ -44,3 +46,5 @@ struct CoarseClock {
 };
 
 } // namespace uitsl
+
+#endif // #ifndef UITSL_CHRONO_COARSECLOCK_HPP_INCLUDE
