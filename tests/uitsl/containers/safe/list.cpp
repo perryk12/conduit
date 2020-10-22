@@ -6,6 +6,9 @@
 
 #include "uitsl/containers/safe/list.hpp"
 
+#include "uitsl/parallel/ThreadMap.hpp"
+#include "uitsl/parallel/ThreadTeam.hpp"
+
 TEST_CASE("list begin() and end()") {
 
 
@@ -24,7 +27,7 @@ TEST_CASE("list begin() and end()") {
 
 }
 
-TEST_CASE("list") {
+TEST_CASE("list, multithread") {
 
   // TODO expand stub test
   uitsl::safe::list<std::string> list;
