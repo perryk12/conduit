@@ -17,3 +17,21 @@ TEST_CASE("deque") {
   REQUIRE(list.back() == "hello");
 
 }
+
+TEST_CASE("list") {
+
+  // TODO expand stub test
+  uitsl::safe::list<std::string> list;
+
+  uitsl::ThreadTeam team;
+
+  for (size_t thread = 0; thread < 4; ++thread) {
+    team.Add([&list](){
+      list.push_back("hello");
+    });
+  }
+  team.Join();
+  REQUIRE(list.front() == "hello");
+  REQUIRE(list.size() == 4);
+
+}
