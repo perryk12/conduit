@@ -26,12 +26,12 @@ RUN \
 
 RUN \
   apt-get install -qq \
-    curl \
-    git \
-    gzip \
-    unzip \
-    tar \
-    wget \
+    curl=7.58.0-2ubuntu3.10 \
+    git=1:2.17.1-1ubuntu0.7 \
+    gzip=1.6-5ubuntu1 \
+    unzip=6.0-21ubuntu1 \
+    tar=1.29b-2ubuntu0.1 \
+    wget=1.19.4-1ubuntu2.2 \
     && \
   echo "installed fundamentals"
 
@@ -159,10 +159,10 @@ RUN echo 'kernel.unprivileged_userns_clone=1' > /etc/sysctl.d/userns.conf
 RUN \
   apt-get install -qq \
     man \
-    vim \
-    nano \
-    emacs \
-    htop \
+    vim=2:8.0.1453-1ubuntu1.3 \
+    nano=2.9.3-2 \
+    emacs=47.0 \
+    htop=2.1.0-3 \
     && \
   echo "installed creature comforts"
 
